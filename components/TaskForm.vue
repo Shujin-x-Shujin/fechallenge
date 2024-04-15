@@ -79,7 +79,7 @@ function closeModal() {
             <div @click="closeModal" class="">
                 <h4 class="text-[12px] text-slate-400 underline cursor-pointer hover:text-slate-600">Cancel</h4>
             </div>
-            <div class="rounded-[20px] w-[64px] h-[20px] bg-[#26A69A] justify-center flex cursor-pointer">
+            <div class="rounded-[20px] items-center w-[64px] h-[20px] bg-[#26A69A] justify-center flex cursor-pointer p-3">
                 <button class="text-[12px] text-white" type="submit">{{ btnLabel }}</button>
             </div>
         </div>

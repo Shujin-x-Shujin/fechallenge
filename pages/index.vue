@@ -5,27 +5,31 @@ import { timeDiff } from '~/helpers/timeDifference'
 
 const store = useTodoListStore()
 
-const isOpen = ref<Boolean>(false)
-const isOpenDeleteModal = ref<Boolean>(false)
-const isOpenUpdateModal = ref<Boolean>(false)
+const isLoading = ref<Boolean>(false)
+const isOpen = ref<any>(false)
+const isOpenDeleteModal = ref<any>(false)
+const isOpenUpdateModal = ref<any>(false)
 const isOpenSelect = ref<Boolean>(false)
-const taskId = ref(null)
+const taskId = ref<any>(null)
 const sortKey = ref<String>('task_name')
 const sortValue = ref<String>('ASC')
-const page = ref<Number>(1)
-const pageSize = ref<Number>(5)
-
-const task_name = ref<String>('')
-const description = ref<String>('')
-const starts_at = ref<String>('')
-const ends_at = ref<String>('')
+const page = ref<any>(1)
+const pageSize = ref<any>(5)
+const totalData = ref<Number>(0)
+const task_name = ref<any>('')
+const description = ref<any>('')
+const starts_at = ref<any>('')
+const ends_at = ref<any>('')
 
 async function getTask() {
-  const response = await $fetch('https://r874r864j1.execute-api.us-east-1.amazonaws.com/sandbox/task/list', {
+  isLoading.value = true
+  try {
+    const response: any = await $fetch('https://ejhu9jgcxd.execute-api.us-east-1.amazonaws.com/sandbox/task/list', {
     method: 'post',
     body: {
       page: page.value,
       pageSize: pageSize.value,
+      returnCount: true,
       notEqualFilters: [
         {
           key: "status",
@@ -38,8 +42,13 @@ async function getTask() {
       }
     }
   })
-  console.log(response)
+  totalData.value = response.data.total
   store.updateList(response.data)
+}catch(err){
+console.log(err)
+}finally {
+  isLoading.value = false
+}
 }
 
 onMounted(async() =>{
@@ -62,16 +71,16 @@ async function prevPage(){
   console.log(page.value)
 }
 
-function openDeleteModal(id){
+function openDeleteModal(id: any){
   isOpenDeleteModal.value = true
   taskId.value = id
   console.log(taskId.value)
 }
-async function openUpdateModal(id){
+async function openUpdateModal(id: any){
   taskId.value = id
   
   try {
-    const fetchedTask = await $fetch(`https://r874r864j1.execute-api.us-east-1.amazonaws.com/sandbox/task/get/${id}`)
+    const fetchedTask: any = await $fetch(`https://ejhu9jgcxd.execute-api.us-east-1.amazonaws.com/sandbox/task/get/${id}`)
      task_name.value = fetchedTask.data.task_name
      description.value = fetchedTask.data.description
      starts_at.value = fetchedTask.data.starts_at
@@ -100,19 +109,20 @@ function openModal() {
 function closeModal() {
   isOpen.value = false
 }
-function updateIsDelete(value){
+function updateIsDelete(value: boolean){
   isOpenDeleteModal.value = value
 }
-function updateIsUpdate(value){
+function updateIsUpdate(value: boolean){
   isOpenUpdateModal.value = value
 }
-function updateIsCreate(value) {
+function updateIsCreate(value: boolean) {
   isOpen.value = value
 }
 
-async function addTask(data){
+async function addTask(data: any){
+  isLoading.value = true
   try {
-      const response = await $fetch('https://r874r864j1.execute-api.us-east-1.amazonaws.com/sandbox/task/create', {
+      const response: any = await $fetch('https://ejhu9jgcxd.execute-api.us-east-1.amazonaws.com/sandbox/task/create', {
           method: 'post',
           body: {
             task_name: data.task_name,
@@ -123,29 +133,36 @@ async function addTask(data){
       })
       console.log("data sent: ",response.data)
       await getTask()
-    }catch(err){
+    }catch(err: any){
         console.log("error: ",err.message)
+    }finally{
+      isLoading.value = false
     }
 }
 async function deleteTask() {
+  isLoading.value = true
+  closeDeleteModal()
   try{
-    const response = await $fetch(`https://r874r864j1.execute-api.us-east-1.amazonaws.com/sandbox/task/delete/${taskId.value}`, {
+    const response = await $fetch(`https://ejhu9jgcxd.execute-api.us-east-1.amazonaws.com/sandbox/task/delete/${taskId.value}`, {
     method: 'put'
   })
   await getTask()
+  
   }catch(err){
     console.log('error: ', err)
+  }finally {
+    isLoading.value = false
   }
-  closeDeleteModal()
 }
-async function sortBy(key, value){
+async function sortBy(key: any, value: any){
   sortKey.value = key
   sortValue.value = value
   await getTask()
 }
-async function submitUpdate(task){
+async function submitUpdate(task: any){
+  isLoading.value = true
   try{
-    const editedTask = await $fetch(`https://r874r864j1.execute-api.us-east-1.amazonaws.com/sandbox/task/update/${taskId.value}`, {
+    const editedTask = await $fetch(`https://ejhu9jgcxd.execute-api.us-east-1.amazonaws.com/sandbox/task/update/${taskId.value}`, {
       method: 'put',
       body: {
         task_name: task.task_name,
@@ -159,6 +176,8 @@ async function submitUpdate(task){
     console.log('editted data: ', editedTask)
   }catch(err){
     console.log('submit edit error: ', err)
+  }finally {
+    isLoading.value = false
   }
 }
 function cancelUpdateForm(){
@@ -166,7 +185,7 @@ function cancelUpdateForm(){
 }
 </script>
 <template>
-  <div class="p-[25px]">
+  <div class="mt-2 px-5">
     <Modal :isOpen="isOpen" @update:is-open="updateIsCreate" title="Create Task">
       <TaskForm
           btnLabel="Create"
@@ -188,21 +207,21 @@ function cancelUpdateForm(){
       </div>
     </Modal>
     <Modal :is-open="isOpenUpdateModal" @update:is-open="updateIsUpdate" title="Edit Task">
-      <EditTaskForm 
+      <TaskForm 
           v-model:task_name="task_name"
           v-model:description="description"
           v-model:starts_at="starts_at"
           v-model:ends_at="ends_at"
           btnLabel="Save"
           @cancel="cancelUpdateForm"
-          @submitUpdate="submitUpdate"
+          @submit="submitUpdate"
       />
     </Modal>
-      <div class="h-[70px] shadow-lg mb-[10px] flex items-center p-4">
-        <span class="text-lg font-bold fixed">To-Do List</span>
+      <div class="h-[70px] shadow-lg mb-[10px] flex items-center px-4">
+        <h1 class="text-lg font-bold w-[220px]">To-Do List</h1>
         <div class=" w-full flex justify-end gap-2">
           <div class="relative" id="dropdownButton" >
-            <div @click="toggleDropdown()" class="flex items-center h-[36px] w-[112px] outline outline-1 outline-[#1976D2] gap-1 py-[4px] px-[16px] rounded-[36px] cursor-pointer">
+            <div @click="toggleDropdown" class="flex items-center h-[36px] w-[112px] outline outline-1 outline-[#1976D2] gap-1 py-[4px] px-[16px] rounded-[36px] cursor-pointer">
             <span class="text-[#1976D2] font-bold text-sm">Sort By</span>
             <Icon name="ic:baseline-keyboard-arrow-down" color="#1976D2" size="25"/>
           </div>
@@ -218,30 +237,29 @@ function cancelUpdateForm(){
             <span class="text-white text-sm font-bold">Add Task</span>
           </div>
         </div>
-        
+      </div>
+      <div class="flex justify-center w-full">
+        <Spinner :isLoading="isLoading"/>
       </div>
       <!-- <div>
         {{ store.list }}
       </div> -->
       <div class="container mx-auto shadow-lg">
-        <table class="table-auto w-full">
+        <table class="w-[100%]">
           <thead>
             <tr
               class="bg-[#1D50A2] text-white text-left text-[14px] font-semibold"
             >
-              <th class="px-4 py-2 w-[241px]">Task Name</th>
-              <th class="px-4 py-2 w-[336px]">Description</th>
-              <th class="px-4 py-2 w-[146px]">Time Left</th>
-              <th class="px-4 py-2 w-[189px]">Start Date</th>
-              <th class="px-4 py-2 w-[189px]">End Date</th>
-              <th class="px-4 py-2 w-[189px]">Created At</th>
-              <th class="px-4 py-2 w-[101px]">Actions</th>
+              <th class="px-4 py-2 w-[241px] h-[50px]">Task Name</th>
+              <th class="px-4 py-2 w-[336px] h-[50px]">Description</th>
+              <th class="px-4 py-2 w-[146px] h-[50px]">Time Left</th>
+              <th class="px-4 py-2 w-[189px] h-[50px]">Start Date</th>
+              <th class="px-4 py-2 w-[189px] h-[50px]">End Date</th>
+              <th class="px-4 py-2 w-[189px] h-[50px]">Created At</th>
+              <th class="px-4 py-2 w-[101px] h-[50px]">Actions</th>
             </tr>
           </thead>
           <tbody>
-            <!-- <tr v-for="(todo, index) in store.list.records" :key="index">
-              <td>{{ todo.task_name }}</td>
-            </tr> -->
             <tr v-for="(todo, index) in store.list.records" :key="index" class="border-b-2">
               <td class="px-4 py-2 h-[54px] text-justify text-[14px]">
                  {{ todo.task_name }}
@@ -273,7 +291,7 @@ function cancelUpdateForm(){
         <tfoot class="flex h-[50px] justify-end gap-5 items-center px-5">
             <span class="text-[12px]">Rows per page: </span>
             <span class="text-[12px]">5</span>
-            <span class="text-[12px]">1-5 of {{ page }}</span>
+            <span class="text-[12px]">1-{{ totalData }} of {{ totalData }}</span>
             <div @click="prevPage" class="cursor-pointer"> 
               <Icon name="ic:baseline-arrow-back-ios"/>
             </div>

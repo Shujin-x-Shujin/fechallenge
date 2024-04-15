@@ -14,12 +14,12 @@
             </div>
         </div>
     </header>
-    <div class="container justify-center h-[500px]">
+    <div class="justify-center h-[500px]">
         <slot />
     </div>
     <footer>
-        <div class="h-[177px] bg-[#1D50A2] flex items-center justify-center px-[150px]">
-            <div class="w-full h-full p-5 flex justify-around">
+        <div class="h-[277px] bg-[#1D50A2] flex items-center justify-center px-[150px]">
+            <div class="w-full h-full py-10 px-5 flex justify-between">
                 <img class="h-[78px]" src="../assets/logo/ECV_logo.png" alt="">
                 <div class="flex flex-col">
                     <span class="text-white mb-4">Sitemap</span>
@@ -47,7 +47,7 @@
                             Xilliams Corner Wine © 2017. 1112 A Market St # Ste B22, Charlottesville, CA 45565
                         </div>
                     </div>
-                    <div>
+                    <div class="mt-10">
                         <span class="text-white">News Letter</span>
                         <div class="mt-2 flex items-center relative">
                             <input class="w-full bg-[#1D50A2] pr-4 py-2 text-white border-b focus:outline-none" type="text" placeholder="Enter your email address">
